@@ -48,8 +48,19 @@ contract LandRegistration
     mapping(address => bool) public IsBuyerVerify;
     mapping(address => bool) public IsSellerVerify;
     mapping(uint => bool) public IsLandVerify;
-    mapping(address => bool) public IsLandInspectorVerify;
 
+    address public LandInspector;
+
+    constructor() payable
+    {
+        LandInspector = msg.sender;
+    }
+
+    modifier onlylandinspector()
+    {
+        require(msg.sender == LandInspector,"you are not land inspector");
+        _;        
+    }
 
     // function of register seller
 
@@ -62,14 +73,14 @@ contract LandRegistration
 
     //function of verify seller
 
-    function VerifySeller(address add) public
+    function VerifySeller(address add) onlylandinspector() public
     {
         IsSellerVerify[add] = true;
     }
 
     //function of reject seller
 
-    function RejectSeller(address add ) public
+    function RejectSeller(address add ) onlylandinspector() public
     {
         IsSellerVerify[add] = false;
     }
@@ -85,14 +96,14 @@ contract LandRegistration
 
     //function of verify buyer
 
-    function VerifyBuyer(address addr) public
+    function VerifyBuyer(address addr) onlylandinspector() public
     {
         IsBuyerVerify[addr] = true;
     }
 
     //function of reject buyer
 
-    function RejectBuyer(address addr) public
+    function RejectBuyer(address addr) onlylandinspector() public
     {
         IsBuyerVerify[addr] = false;
     }
@@ -108,14 +119,14 @@ contract LandRegistration
 
     //function of land verify
 
-    function VerifyLand(uint _LandID) public
+    function VerifyLand(uint _LandID) onlylandinspector() public
     {
         IsLandVerify[_LandID] = true;
     }
 
     //function of reject land
 
-    function RejectLand(uint _LandID) public
+    function RejectLand(uint _LandID) onlylandinspector() public
     {
         IsLandVerify[_LandID] = false;
     }
@@ -186,23 +197,7 @@ contract LandRegistration
 
         function RegisterLandInspector(address ID, string memory NAME, uint AGE, string memory Designation) public
     {
-        LandInspectorDetails[msg.sender] = LandInspectorDetail(ID, NAME, AGE, Designation);
-
-        require(IsLandInspectorVerify[msg.sender] == true,"please verify landinspector");
-    }
-
-    //function of verify land inspector
-
-    function VerifyLandInspector(address addr) public
-    {
-        IsLandInspectorVerify[addr] = true;
-    }
-
-    //function of reject land inspector
-
-    function RejectLandInspector(address addr ) public
-    {
-       IsLandInspectorVerify[addr] = false;
+        LandInspectorDetails[LandInspector] = LandInspectorDetail(ID, NAME, AGE, Designation);
     }
 
     // buy land
@@ -210,8 +205,9 @@ contract LandRegistration
     function BuyLand(uint _LandID) public payable
     {
         require(IsBuyerVerify[msg.sender] == true,"please verify buyer");
-        require(IsLandVerify[_LandID] == true,"please verify buyer");
+        require(IsLandVerify[_LandID] == true,"please verify land");
         payable(LandDetails[_LandID].Owner).transfer(msg.value);
+        require(msg.value >= 3 ether, "please pay me ether");
         LandDetails[_LandID].Owner = msg.sender;
     }
 
@@ -222,5 +218,4 @@ contract LandRegistration
         LandDetails[_LandID].Owner = newOwner;
     }
 }
-
 
